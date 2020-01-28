@@ -15,21 +15,51 @@ var rcon,
     webSocketServer,
     interval,
     connections = [], 
-    lastData = {};
+    lastData = {},
+    rconTimeout,
+    rconErrorCount = 0;
 
 initializeRcon = (config) => {
   console.info(`Initializing RCON connection to ${config.RCON_HOST}:${config.RCON_PORT}`);
   try {
     rcon = new Rcon(config.RCON_HOST, config.RCON_PORT, config.RCON_PASSWORD, config.RCON_TIMEOUT);
-    rcon.connected = false;
-    rcon.connect().then(() => {
-      rcon.connected = true;
-    }).catch((error) => {
-      console.error(`There was an error initializing RCON connection`, error);
-    });
+    connectRcon();
   }catch(error) {
-    console.error(`Failed to initialize RCON connection`, error);
+    console.error(`Failed to initialize RCON connection: `, error);
   }
+};
+
+connectRcon = () => {
+  if (rcon && !rcon.hasAuthed) {
+    console.info('Attempting to establish an RCON connection');
+    try {
+      rcon.connect().then(() => {
+        console.info('RCON connection established');
+        rconErrorCount = 0;
+        clearRconTimeout();
+      }).catch((error) => {
+        console.error('There was an error creating an RCON connection: ', error);
+        clearRconTimeout();
+      });
+    }catch(error) {
+      console.error('Error establishing an RCON connection: ', error);
+      clearRconTimeout();
+    }
+  }
+};
+
+resetRcon = () => {
+  console.info('Too many RCON errors, attempting to re-establish connection...');
+  rcon.disconnect().then(connectRcon).catch((error) => {
+    console.error('Error disconnecting RCON: ', error);
+  });
+};
+
+clearRconTimeout = () => {
+  if (rconTimeout) {
+    clearTimeout(rconTimeout);
+  }
+  rconTimeout = null;
 };
 
 initializeWebSocketServer = (config) => {
@@ -40,7 +70,7 @@ initializeWebSocketServer = (config) => {
     });
     webSocketServer.on('connection', openWebSocketConnection);
   } catch(error) {
-    console.error(`Failed to initialize WebSocket Server`, error);
+    console.error(`Failed to initialize WebSocket Server: `, error);
   }
 };
 
@@ -68,14 +98,21 @@ sendPlayerData = (data) => {
 };
 
 getPlayerData = () => {
-  if (!rcon || !rcon.connected) {
-    initializeRcon(config);
+  if (!rcon || !rcon.hasAuthed || !rconTimeout) {
+    rconTimeout = setTimeout(connectRcon, 3000);
   }
-  if (rcon && rcon.connected && connections.length) {
+  if (rcon && rcon.hasAuthed && connections.length && rconErrorCount < 5) {
     getPlayers()
       .then(getAllPlayerCoords)
       .then(unpackPlayerData)
-      .then(sendPlayerData);
+      .then(sendPlayerData)
+      .catch((error) => {
+        //console.error('An error occured trying to get player data: ', error);
+        rconErrorCount++;
+        if (rconErrorCount > 5) {
+          resetRcon();
+        }
+    });
   }
 };
 
@@ -86,7 +123,8 @@ unpackPlayerData = (dataArray) => {
       name: element.name,
       x: element.x,
       y: element.y,
-      z: element.z
+      z: element.z,
+      dimension: element.dimension
     };
   });
   return data;
@@ -112,7 +150,12 @@ getAllPlayerCoords = (playerList) => {
 };
 
 getPlayerCoords = (playerName) => {
-  return rcon.send(`data get entity ${playerName} Pos`).then(parsePlayerCoords).then(data => {return {name: playerName, x: data.x, y: data.y, z: data.z}});
+  return rcon.send(`data get entity ${playerName} Pos`)
+          .then(parsePlayerCoords)
+          .then(data => {
+              return {name: playerName, x: data.x, y: data.y, z: data.z};
+          })
+          .then(getPlayerDimension);
 };
 
 parsePlayerCoords = (playerResult) => {
@@ -125,6 +168,25 @@ parsePlayerCoords = (playerResult) => {
   };
 };
 
+getPlayerDimension = (playerData) => {
+  return rcon.send(`data get entity ${playerData.name} Dimension`)
+          .then(parsePlayerDimension)
+          .then(dimensionData => {
+            return {
+              name: playerData.name,
+              x: playerData.x,
+              y: playerData.y,
+              z: playerData.z,
+              dimension: dimensionData
+            };
+          });
+};
+
+parsePlayerDimension = (playerResult) => {
+  let data = playerResult.split(':')[1].trim();
+  
+  return data;
+};
 
 initializeWebSocketServer(config);
 initializeRcon(config);

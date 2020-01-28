@@ -14,7 +14,8 @@ window.PlayerLocations = {
    
     for (let playerName in list) {
       let playerData = list[playerName];
-      let latlng = overviewer.util.fromWorldToLatLng(playerData.x, playerData.y, playerData.z, overviewerConfig.tilesets[0]);
+      let multi = playerData.dimension === "-1" ? 8 : 1;
+      let latlng = overviewer.util.fromWorldToLatLng(playerData.x * multi, playerData.y, playerData.z * multi, window.PlayerLocations.getCurrentTileSet());
       
       if (window.PlayerLocations.playerMarkers[playerName]) {
         window.PlayerLocations.playerMarkers[playerName].setLatLng(latlng);
@@ -37,7 +38,19 @@ window.PlayerLocations = {
 
     }
   },
+  getCurrentTileSet: () => {
+    let name = overviewer.current_world;
+    for (let index in overviewerConfig.tilesets) {
+      let tileset = overviewerConfig.tilesets[index];
+      if (tileset.world === name) {
+        return tileset;
+      }
+    }
+  },
   initialize: () => {
+    window.PlayerLocations.connect();
+  },
+  connect: () => {
     let connection = new WebSocket(window.PlayerLocations.socketUrl);
     window.PlayerLocations.connection = connection;
     connection.onopen = () => {
@@ -45,6 +58,7 @@ window.PlayerLocations = {
     };
     connection.onerror = (error) => {
       console.error(`WebSocket error ${error}`);
+      setTimeout(window.PlayerLocations.connect, 3000);
     };
     connection.onmessage = (msg) => {
       try{
@@ -59,8 +73,8 @@ window.PlayerLocations = {
     };
     connection.onclose = () => {
       console.info('WebSocket Connection closed');
+      setTimeout(window.PlayerLocations.connect(), 3000);
     };
-    
   }
 };
 
