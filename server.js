@@ -52,8 +52,10 @@ async function connectRcon() {
 
 async function resetRcon() {
   try {
-    if (rcon && rcon.hasAuthed)
+    if (rcon) {
       await rcon.disconnect(); // try to disconnect
+      rcon = null;
+    }
   } catch (error) { }
 }
 
@@ -117,6 +119,8 @@ async function loop() {
 
   // reconnect
   try {
+    if (!rcon)
+      await initializeRcon();
     if (!rcon.hasAuthed)
       await connectRcon();
   } catch (error) {
