@@ -4,7 +4,7 @@ const Fs = require('fs');
 const Https = require('https');
 
 const config = {
-  WEBSOCKET_PORT: 8888,
+  WEBSOCKET_PORT: Number(process.env.WEBSOCKET_PORT) || 8888,
   WEBSOCKET_KEY: process.env.WEBSOCKET_KEY || '',
   WEBSOCKET_CERT: process.env.WEBSOCKET_CERT || '',
   RCON_HOST: process.env.RCON_HOST,
