@@ -164,9 +164,12 @@ async function loop() {
   }
 }
 
-const playerListRegex = /There are \d+ of a max \d+ players online: ((?:[^\s,]+,?\s?)*)/
+// 1.16: Additional 'of' after 'max'
+const playerListRegex = /There are \d+ of a max(?: of)? \d+ players online: ((?:[^\s,]+,?\s?)*)/
 const playerPosRegex = /has the following entity data: \[(-?\d+.?\d*)d, (-?\d+.?\d*)d, (-?\d+.?\d*)d\]/
-const playerDimRegex = /has the following entity data: (-?\d+)/
+// 1.16: Dimension can be a string like 'minecraft:overworld'
+const playerDimRegex = /has the following entity data: (-?\d+|"[^\s]+")/
+const knownDims = ['minecraft:the_nether', 'minecraft:overworld', 'minecraft:the_end'];
 async function updatePlayerData() {
   // list players
   const listResponse = await rcon.send('list');
@@ -203,6 +206,11 @@ async function updatePlayerData() {
     if (regexMatch === null)
       throw new Error(`Invalid response while getting player dimension for player ${player}. Response was: ${playerResult}`);
     const dim = parseInt(regexMatch[1]);
+    let dim = parseInt(regexMatch[1], 10);
+    if (isNaN(dim))
+      dim = regexMatch[1].slice(1, -1); // starting with 1.16: dimension is already a string but in quotes
+    else
+      dim = dim >= -1 && dim <= 1 ? knownDims[dim + 1] : "unknown";
 
     // combine
     newData[player] = {

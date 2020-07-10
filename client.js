@@ -106,10 +106,10 @@ PlayerLocations.prototype.getCurrentDimension = function () {
   // NOTE: this doesn't work for multi world setups or more than these 3 dimensions
   const world = window.overviewer.current_world;
   if (world.endsWith('nether'))
-    return -1;
+    return 'minecraft:the_nether';
   if (world.endsWith('end'))
-    return 1;
-  return 0; // default (overworld)
+    return 'minecraft:the_end';
+  return 'minecraft:overworld'; // default
 }
 
 PlayerLocations.prototype.getCurrentTileSet = function () {
