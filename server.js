@@ -205,7 +205,6 @@ async function updatePlayerData() {
     regexMatch = playerDimRegex.exec(playerResult);
     if (regexMatch === null)
       throw new Error(`Invalid response while getting player dimension for player ${player}. Response was: ${playerResult}`);
-    const dim = parseInt(regexMatch[1]);
     let dim = parseInt(regexMatch[1], 10);
     if (isNaN(dim))
       dim = regexMatch[1].slice(1, -1); // starting with 1.16: dimension is already a string but in quotes
