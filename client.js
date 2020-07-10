@@ -143,7 +143,10 @@ PlayerLocations.prototype.connect = function () {
     };
   }
   ws.onerror = (error) => {
-    console.error(`WebSocket error: ${error.message}`);
+    if (error.message != null)
+      console.error(`WebSocket error: ${error.message}`);
+    else
+      console.error(`WebSocket error`);
     if (this.debug)
       console.error(error);
   };

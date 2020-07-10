@@ -53,10 +53,16 @@ async function connectRcon() {
 async function resetRcon() {
   try {
     if (rcon) {
-      await rcon.disconnect(); // try to disconnect
+      // custom fix: disconnect is not timing out by itself
+      await Promise.any(
+        rcon.disconnect(), // try to disconnect
+        new Promise(resolve => setTimeout(resolve, config.RCON_TIMEOUT)) // or time out
+      );
       rcon = null;
     }
-  } catch (error) { }
+  } catch (error) {
+    rcon = null;
+  }
 }
 
 function initializeWebSocketServer() {
@@ -160,7 +166,7 @@ async function updatePlayerData() {
   const listResponse = await rcon.send('list');
   let regexMatch = playerListRegex.exec(listResponse);
   if (regexMatch === null)
-    throw new Error('Invalid response');
+    throw new Error(`Invalid response while listing online players. Response was: ${listResponse}`);
 
   // to array
   let players = regexMatch[1].split(', ');
@@ -180,7 +186,7 @@ async function updatePlayerData() {
       continue; // player left
     regexMatch = playerPosRegex.exec(playerResult);
     if (regexMatch === null)
-      throw new Error('Invalid response');
+      throw new Error(`Invalid response while getting player position for player ${player}. Response was: ${playerResult}`);
     const x = parseFloat(regexMatch[1]), y = parseFloat(regexMatch[2]), z = parseFloat(regexMatch[3]);
 
     // dimension
@@ -189,7 +195,7 @@ async function updatePlayerData() {
       continue; // player left
     regexMatch = playerDimRegex.exec(playerResult);
     if (regexMatch === null)
-      throw new Error('Invalid response');
+      throw new Error(`Invalid response while getting player dimension for player ${player}. Response was: ${playerResult}`);
     const dim = parseInt(regexMatch[1]);
 
     // combine
