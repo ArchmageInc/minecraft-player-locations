@@ -98,7 +98,7 @@ function openWebSocketConnection(ws, req) {
   ws.on('close', closeWebSocketConnection);
   ws.send(playerData); // send current data
   if (loopId === -1) {
-    loopId = setInterval(loop, config.frequency); // enable loop for first connection
+    loopId = setTimeout(loop, config.frequency); // enable loop for first connection
     if (config.debug)
       console.info('Loop started');
   }
@@ -115,7 +115,6 @@ function closeWebSocketConnection() {
 async function loop() {
   if (connections.length === 0) {
     // disable loop, it's not needed atm
-    clearInterval(loopId);
     loopId = -1;
     playerData = emptyData;
     if (config.debug)
@@ -131,6 +130,7 @@ async function loop() {
       await connectRcon();
   } catch (error) {
     console.error(`Could not establish rcon connection. Reason: ${error.message}`);
+    loopId = setTimeout(loop, config.frequency);
     return;
   }
 
@@ -147,15 +147,21 @@ async function loop() {
       await resetRcon();
     }
   }
-  if (lastData === playerData) // nothing changed, skip update
+  if (lastData === playerData) { // nothing changed, skip update
+    loopId = setTimeout(loop, config.frequency);
     return;
+  }
 
   // send
   if (config.debug)
     console.info(`Sending player data to ${connections.length} connections`, playerData);
-  connections.forEach((conn) => {
-    conn.send(playerData);
-  });
+  try {
+    connections.forEach((conn) => {
+      conn.send(playerData);
+    });
+  } finally {
+    loopId = setTimeout(loop, config.frequency);
+  }
 }
 
 const playerListRegex = /There are \d+ of a max \d+ players online: ((?:[^\s,]+,?\s?)*)/
