@@ -1,11 +1,12 @@
-FROM python:3.8-alpine
+FROM python:3.8-slim
+WORKDIR /mclocations
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY server.py .
+COPY mclocations mclocations/
+
 EXPOSE 8888
 
-WORKDIR /usr/src/app
-
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY server.py ./
-
-CMD [ "python", "./server.py" ]
+ENTRYPOINT [ "python", "./server.py"]

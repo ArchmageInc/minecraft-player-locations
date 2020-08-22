@@ -2,76 +2,83 @@ import asyncio
 import json
 import logging
 import os
-import re
 import signal
-import sys
+from dataclasses import asdict
+
 import websockets
 
-from mcrcon import MCRcon
+from mclocations.minecraft import MinecraftServer
 
-RCON_HOST = os.getenv('RCON_HOST')
-RCON_PASSWORD = os.getenv('RCON_PASSWORD')
-RCON_PORT = os.getenv('RCON_PORT', 25575)
-SOCKET_HOST = os.getenv('SOCKET_HOST', '0.0.0.0')
-SOCKET_PORT = int(os.getenv('SOCKET_PORT', 8888))
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'ERROR')
-REFRESH_RATE = int(os.getenv('REFRESH_RATE', 5))
-
-logging.basicConfig(level=LOG_LEVEL)
-
-assert RCON_HOST is not None
-assert RCON_PASSWORD is not None
+log = logging.getLogger(__name__)
 
 
-async def send_locations(websocket, path):
-    while True:
-        output = json.dumps(get_locations())
+class WebSocketServer:
+    def __init__(self, minecraft, socket_host, socket_port, refresh_rate):
+        self.log = log
+        self.minecraft = minecraft
+        self.socket_host = socket_host
+        self.socket_port = socket_port
+        self.refresh_rate = refresh_rate
+        self.ws_server = None
+
+    async def start(self):
+        self.log.info('Starting the websocket server')
+
+        def stop_cb():
+            return asyncio.create_task(self.stop())
+
         try:
-            await websocket.send(output)
-        except (websockets.exceptions.ConnectionClosedOK, websockets.exceptions.ConnectionClosedError,
-                websockets.exceptions.ConnectionClosed):
-            await websocket.wait_closed()
-            logging.info('Client connection closed')
-            break
-        finally:
-            await asyncio.sleep(REFRESH_RATE)
+            asyncio.get_running_loop().add_signal_handler(signal.SIGINT, stop_cb)
+            asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, stop_cb)
+        except NotImplementedError as e:
+            log.exception(f'Not implemented')
+
+        self.ws_server = await websockets.serve(self.send_locations, self.socket_host, self.socket_port)
+
+        await self.ws_server.wait_closed()
+
+        self.log.info('Websocket server closed')
+
+    async def stop(self):
+        self.ws_server.close()
+        self.minecraft.disconnect()
+
+    async def send_locations(self, websocket, path):
+        while True:
+            players = self.minecraft.get_players()
+            player_data = json.dumps([asdict(p) for p in players])
+            self.log.debug(f'Sending {player_data}')
+            await websocket.send(player_data)
+            await asyncio.sleep(self.refresh_rate)
 
 
-def get_locations():
-    output = []
-    response = mcr.command('/list')
-    match = re.search(r'([0-9]+).+:(.+)', response)
-    number_of_players = int(match.group(1))
+async def main(rcon_host, rcon_password, rcon_port, socket_host, socket_port, refresh_rate, log_level):
+    logging.basicConfig(level=log_level)
+    minecraft = MinecraftServer(rcon_host, rcon_password, rcon_port)
+    ws = WebSocketServer(minecraft, socket_host, socket_port, refresh_rate)
 
-    if number_of_players != 0:
-        player_list = match.group(2).strip().split(", ")
-        for playerName in player_list:
-            response = mcr.command(f"/data get entity {playerName} Pos")
-            match = re.search(r'(\[.*\])', response)
-            player_position = eval(match.group(1).replace('d', ''))
-
-            response = mcr.command(f'/data get entity {playerName} Dimension')
-            match = re.search(r'data: (.*)', response)
-            player_dimension = match.group(1).strip("\"")
-
-            output.append({'name': playerName, 'position': {
-                'x': player_position[0], 'y': player_position[1], 'z': player_position[2]},
-                           'dimension': player_dimension})
-
-    return output
+    await ws.start()
 
 
-def exit_gracefully():
-    logging.warning('Shutting down')
-    sys.exit(1)
+if __name__ == '__main__':
+    import argparse
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--rconhost", type=str, default=os.getenv('RCON_HOST'))
+    parser.add_argument("--rconpwd", type=str, default=os.getenv('RCON_PASSWORD'))
+    parser.add_argument("--rconport", type=str, default=os.getenv('RCON_PORT', 25575))
+    parser.add_argument("--sockethost", type=str, default=os.getenv('SOCKET_HOST', '0.0.0.0'))
+    parser.add_argument("--socketport", type=int, default=int(os.getenv('SOCKET_PORT', 8888)))
+    parser.add_argument("--refreshrate", type=int, default=int(os.getenv('REFRESH_RATE', 5)))
+    parser.add_argument('--verbose', '-v', action='count', default=0)
 
-signal.signal(signal.SIGINT, exit_gracefully)
+    args = parser.parse_args()
 
-server = websockets.serve(send_locations, SOCKET_HOST, SOCKET_PORT)
+    if args.verbose > 1:
+        log_level = logging.DEBUG
+    elif args.verbose > 0:
+        log_level = logging.INFO
+    else:
+        log_level = logging.WARN
 
-logging.info(f"Starting socket server on {SOCKET_HOST}:{SOCKET_PORT}")
-
-with MCRcon(RCON_HOST, RCON_PASSWORD) as mcr:
-    asyncio.get_event_loop().run_until_complete(server)
-    asyncio.get_event_loop().run_forever()
+    asyncio.run(main(args.rconhost, args.rconpwd, args.rconport, args.sockethost, args.socketport, args.refreshrate, log_level))
