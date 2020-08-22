@@ -65,11 +65,14 @@ docker run \
   --detach \
   --publish 8888:8888 \
   --name minecraft-player-locations \
-  --env "NODE_ENV=production" \
   --env "RCON_HOST=MyMineCraftHost" \
   --env "RCON_PORT=25575" \
   --env "RCON_PASSWORD=supersecretpassword" \
-  archmageinc/minecraft-player-locations
+  --env "SOCKET_HOST=0.0.0.0"\
+  --env "SOCKET_PORT=8888" \
+  --env "LOG_LEVEL=WARNING" \
+  --env "REFRESH_RATE=5" \
+  archmageinc/minecraft-player-locations:python
 ```
 
 #### Configuration

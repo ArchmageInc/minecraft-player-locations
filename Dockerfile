@@ -1,10 +1,11 @@
-FROM node:8.15.1-alpine
+FROM python:3.8-alpine
 EXPOSE 8888
-WORKDIR /home/node/app
 
-COPY ./package*.json ./
-RUN npm install
+WORKDIR /usr/src/app
 
-COPY . .
-USER node
-CMD ["node","server.js"]
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY server.py ./
+
+CMD [ "python", "./server.py" ]

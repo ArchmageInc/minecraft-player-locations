@@ -1,7 +1,7 @@
 window.PlayerLocations = {
   socketUrl: 'ws://' + window.location.hostname + ':8888',
   debug: false,
-  connection: {},
+  connection: null,
   playerMarkers: {},
   createPlayerMarkers: (list) => {
 
@@ -11,31 +11,29 @@ window.PlayerLocations = {
         delete window.PlayerLocations.playerMarkers[playerName];
       }
     }
-   
-    for (let playerName in list) {
-      let playerData = list[playerName];
-      let multi = playerData.dimension === "-1" ? 8 : 1;
-      let latlng = overviewer.util.fromWorldToLatLng(playerData.x * multi, playerData.y, playerData.z * multi, window.PlayerLocations.getCurrentTileSet());
-      
-      if (window.PlayerLocations.playerMarkers[playerName]) {
-        window.PlayerLocations.playerMarkers[playerName].setLatLng(latlng);
-      } else {
-        let icon =L.icon({
-          iconUrl: "https://overviewer.org/avatar/" + playerName,
-          iconSize: [16, 32],
-          iconAnchor: [15, 33]
-        });
+    
+    for (let index in list) {
+        let playerData = list[index];
+        let latlng = overviewer.util.fromWorldToLatLng(playerData.position.x, playerData.position.y, playerData.position.z, window.PlayerLocations.getCurrentTileSet());
+        
+        if (window.PlayerLocations.playerMarkers[playerData.name]) {
+            window.PlayerLocations.playerMarkers[playerData.name].setLatLng(latlng);
+        } else {
+            let icon =L.icon({
+                iconUrl: "https://overviewer.org/avatar/" + playerData.name,
+                iconSize: [16, 32],
+                iconAnchor: [15, 33]
+            });
 
-        let marker = L.marker(latlng, {
-          icon: icon,
-          title: playerName
-        });
+            let marker = L.marker(latlng, {
+                icon: icon,
+                title: playerData.name
+            });
 
-        marker.addTo(overviewer.map);
+            marker.addTo(overviewer.map);
 
-        window.PlayerLocations.playerMarkers[playerName] = marker;
-      }
-
+            window.PlayerLocations.playerMarkers[playerData.name] = marker;
+        }
     }
   },
   getCurrentTileSet: () => {
@@ -51,6 +49,9 @@ window.PlayerLocations = {
     window.PlayerLocations.connect();
   },
   connect: () => {
+    if (window.PlayerLocations.connection) {
+        return;
+    }
     let connection = new WebSocket(window.PlayerLocations.socketUrl);
     window.PlayerLocations.connection = connection;
     connection.onopen = () => {
@@ -58,22 +59,22 @@ window.PlayerLocations = {
     };
     connection.onerror = (error) => {
       console.error(`WebSocket error ${error}`);
-      setTimeout(window.PlayerLocations.connect, 3000);
     };
     connection.onmessage = (msg) => {
-      try{
-        let data = JSON.parse(msg.data);
-        if(window.PlayerLocations.debug) {
-          console.info('WebSocket received data:', data);
+        try{
+            let data = JSON.parse(msg.data);
+            if(window.PlayerLocations.debug) {
+                console.info('WebSocket received data:', data);
+            }
+            window.PlayerLocations.createPlayerMarkers(data);
+        }catch(error) {
+            console.error('Error parsing WebSocket message', error);
         }
-        window.PlayerLocations.createPlayerMarkers(data);
-      }catch(error) {
-        console.error('Error parsing WebSocket message', error);
-      }
     };
     connection.onclose = () => {
-      console.info('WebSocket Connection closed');
-      setTimeout(window.PlayerLocations.connect(), 3000);
+        console.info('WebSocket Connection closed');
+        window.PlayerLocations.connection = null;
+        setTimeout(window.PlayerLocations.connect, 15000);
     };
   }
 };
