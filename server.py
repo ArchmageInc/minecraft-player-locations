@@ -54,9 +54,14 @@ def get_locations():
             match = re.search(r'data: (.*)', response)
             player_dimension = match.group(1).strip("\"")
 
-            output.append({'name': player_name, 'position': {
-                'x': player_position[0], 'y': player_position[1], 'z': player_position[2]},
-                           'dimension': player_dimension})
+            output.append({
+              'name': player_name, 'position': {
+                'x': player_position[0], 
+                'y': player_position[1], 
+                'z': player_position[2]
+              },
+              'dimension': player_dimension
+            })
 
     return output
 
