@@ -1,61 +1,81 @@
+import asyncio
+import json
+import logging
+import os
+import re
+import signal
+import sys
+import websockets
+
 from mcrcon import MCRcon
-import re, json, asyncio, websockets, os, signal, sys, logging
 
 RCON_HOST = os.getenv('RCON_HOST')
 RCON_PASSWORD = os.getenv('RCON_PASSWORD')
-RCON_PORT = os.getenv('RCON_PORT', default=25575)
-SOCKET_HOST = os.getenv('SOCKET_HOST', default='0.0.0.0')
-SOCKET_PORT = int(os.getenv('SOCKET_PORT', default=8888))
-LOG_LEVEL = os.getenv('LOG_LEVEL', default='ERROR')
-REFRESH_RATE = int(os.getenv('REFRESH_RATE', default=5))
+RCON_PORT = os.getenv('RCON_PORT', 25575)
+SOCKET_HOST = os.getenv('SOCKET_HOST', '0.0.0.0')
+SOCKET_PORT = int(os.getenv('SOCKET_PORT', 8888))
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'ERROR')
+REFRESH_RATE = int(os.getenv('REFRESH_RATE', 5))
 
 logging.basicConfig(level=LOG_LEVEL)
 
 assert RCON_HOST is not None
 assert RCON_PASSWORD is not None
 
-async def sendLocations(websocket, path):
+
+async def send_locations(websocket, path):
     while True:
-        output = json.dumps(getLocations())
+        output = json.dumps(get_locations())
         try:
             await websocket.send(output)
-        except (websockets.exceptions.ConnectionClosedOK, websockets.exceptions.ConnectionClosedError, websockets.exceptions.ConnectionClosed):
+        except (websockets.exceptions.ConnectionClosedOK, websockets.exceptions.ConnectionClosedError,
+                websockets.exceptions.ConnectionClosed):
             await websocket.wait_closed()
-            logging.info("Client connection closed")
+            logging.info('Client connection closed')
             break
         finally:
             await asyncio.sleep(REFRESH_RATE)
 
-def getLocations():
+
+def get_locations():
     output = []
-    response = mcr.command("/list")
-    match = re.search(r"([0-9]+).+:(.+)", response)
-    numberOfPlayers = int(match.group(1))
+    response = mcr.command('/list')
+    match = re.search(r'([0-9]+).+:(.+)', response)
+    number_of_players = int(match.group(1))
 
-    if numberOfPlayers != 0:
-        playerList = match.group(2).strip().split(", ")
-        for playerName in playerList:
-            response = mcr.command("/data get entity {} Pos".format(playerName))
-            match = re.search(r"(\[.*\])", response)
-            playerPosition = eval(match.group(1).replace("d",""))
+    if number_of_players:
+        player_list = match.group(2).strip().split(", ")
+        for player_name in player_list:
+            response = mcr.command(f"/data get entity {player_name} Pos")
+            match = re.search(r'(\[.*\])', response)
+            player_position = eval(match.group(1).replace('d', ''))
 
-            response = mcr.command("/data get entity {} Dimension".format(playerName))
-            match = re.search(r"data: (.*)", response)
-            playerDimension = match.group(1).strip("\"")
+            response = mcr.command(f'/data get entity {player_name} Dimension')
+            match = re.search(r'data: (.*)', response)
+            player_dimension = match.group(1).strip("\"")
 
-            output.append({"name": playerName, "position": {"x": playerPosition[0], "y": playerPosition[1], "z": playerPosition[2]}, "dimension": playerDimension})
+            output.append({
+              'name': player_name, 'position': {
+                'x': player_position[0], 
+                'y': player_position[1], 
+                'z': player_position[2]
+              },
+              'dimension': player_dimension
+            })
 
     return output
 
-def exitGracefully():
-    logging.warning("Shutting down")
+
+def exit_gracefully():
+    logging.warning('Shutting down')
     sys.exit(1)
 
-signal.signal(signal.SIGINT, exitGracefully)
 
-server = websockets.serve(sendLocations, SOCKET_HOST, SOCKET_PORT)
+signal.signal(signal.SIGINT, exit_gracefully)
 
-logging.info("Starting socket server on {}:{}".format(SOCKET_HOST, SOCKET_PORT))
+server = websockets.serve(send_locations, SOCKET_HOST, SOCKET_PORT)
+
+logging.info(f"Starting socket server on {SOCKET_HOST}:{SOCKET_PORT}")
 
 with MCRcon(RCON_HOST, RCON_PASSWORD) as mcr:
     asyncio.get_event_loop().run_until_complete(server)
