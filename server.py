@@ -43,7 +43,7 @@ def get_locations():
     match = re.search(r'([0-9]+).+:(.+)', response)
     number_of_players = int(match.group(1))
 
-    if number_of_players != 0:
+    if number_of_players:
         player_list = match.group(2).strip().split(", ")
         for player_name in player_list:
             response = mcr.command(f"/data get entity {player_name} Pos")
