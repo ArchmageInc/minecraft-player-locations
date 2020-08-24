@@ -45,16 +45,16 @@ def get_locations():
 
     if number_of_players != 0:
         player_list = match.group(2).strip().split(", ")
-        for playerName in player_list:
-            response = mcr.command(f"/data get entity {playerName} Pos")
+        for player_name in player_list:
+            response = mcr.command(f"/data get entity {player_name} Pos")
             match = re.search(r'(\[.*\])', response)
             player_position = eval(match.group(1).replace('d', ''))
 
-            response = mcr.command(f'/data get entity {playerName} Dimension')
+            response = mcr.command(f'/data get entity {player_name} Dimension')
             match = re.search(r'data: (.*)', response)
             player_dimension = match.group(1).strip("\"")
 
-            output.append({'name': playerName, 'position': {
+            output.append({'name': player_name, 'position': {
                 'x': player_position[0], 'y': player_position[1], 'z': player_position[2]},
                            'dimension': player_dimension})
 
