@@ -15,6 +15,8 @@ class SocketServer:
     clients = set()
     
     current_data = {
+        'webClients': 0,
+        'timeOfDay': 0,
         'players': []
     }
     
@@ -52,12 +54,14 @@ class SocketServer:
         sys.exit()
     
     async def handle_connections(self, ws, path):
+        self.clients.add(ws)
         while True:
             try:
                 await ws.send(json.dumps(self.current_data))
             except (websockets.exceptions.ConnectionClosedOK, 
                 websockets.exceptions.ConnectionClosedError,
                 websockets.exceptions.ConnectionClosed):
+                    self.clients.remove(ws)
                     await ws.wait_closed()
                     self.log.info('Client connection closed')
                     break
@@ -66,13 +70,49 @@ class SocketServer:
     
     async def schedule_gets(self):
         while True:
-            self.current_data = self.get_locations()
+            if (len(self.clients)):
+                self.current_data['players'] = self.get_player_data()
+                self.current_data['timeOfDay'] = self.get_day_time()
+                self.current_data['webClients'] = len(self.clients)
+            
             await asyncio.sleep(self.refresh_rate)
+            
+    def get_day_time(self):
+        response = self.rcon_client.command('/time query daytime')
+        match = re.search(r'([0-9]+)', response)
+        day_time = int(match.group(1))
+        return day_time
+    
+    def get_player_health(self, player_name):
+        response = self.rcon_client.command(f'/data get entity {player_name} Health')
+        match = re.search(r':.+?([0-9.]+)', response)
+        player_health = float(match.group(1))
+        return player_health
+    
+    def get_player_level(self, player_name):
+        response = self.rcon_client.command(f'/data get entity {player_name} XpLevel')
+        match = re.search(r':.+?([0-9]+)', response)
+        player_level = int(match.group(1))
+        return player_level
+    
+    def get_player_position(self, player_name):
+        response = self.rcon_client.command(f'/data get entity {player_name} Pos')
+        match = re.search(r'(\[.*\])', response)
+        player_position = eval(match.group(1).replace('d', ''))
 
-    def get_locations(self):
-        output = {
-            'players': []
+        response = self.rcon_client.command(f'/data get entity {player_name} Dimension')
+        match = re.search(r'data: (.*)', response)
+        player_dimension = match.group(1).strip('"')
+        
+        return {
+            'x': player_position[0], 
+            'y': player_position[1], 
+            'z': player_position[2],
+            'dimension': player_dimension            
         }
+    
+    def get_player_data(self):
+        players = []
         response = self.rcon_client.command('/list')
         match = re.search(r'([0-9]+).+:(.+)', response)
         number_of_players = int(match.group(1))
@@ -80,24 +120,15 @@ class SocketServer:
         if number_of_players:
             player_list = match.group(2).strip().split(', ')
             for player_name in player_list:
-                response = self.rcon_client.command(f'/data get entity {player_name} Pos')
-                match = re.search(r'(\[.*\])', response)
-                player_position = eval(match.group(1).replace('d', ''))
+                player = {
+                    'name': player_name,
+                    'position': self.get_player_position(player_name),
+                    'health': self.get_player_health(player_name),
+                    'level': self.get_player_level(player_name)
+                }
 
-                response = self.rcon_client.command(f'/data get entity {player_name} Dimension')
-                match = re.search(r'data: (.*)', response)
-                player_dimension = match.group(1).strip('"')
+                players.append(player)
 
-                output['players'].append({
-                    'name': player_name, 
-                    'position': {
-                        'x': player_position[0], 
-                        'y': player_position[1], 
-                        'z': player_position[2]
-                    },
-                    'dimension': player_dimension
-                })
-
-        return output
+        return players
     
 SocketServer().start()

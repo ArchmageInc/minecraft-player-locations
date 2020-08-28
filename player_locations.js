@@ -68,7 +68,7 @@ window.PlayerLocations = {
   },
   getDimensionalCoords: (player) => {
     let currentWorldName = overviewer.current_layer[overviewer.current_world].tileSetConfig.name.toLowerCase();
-    let playerDimension = player.dimension.split(':')[1].toLowerCase();
+    let playerDimension = player.position.dimension.split(':')[1].toLowerCase();
     
     if (currentWorldName === "nether" && playerDimension === "overworld") {
         return {
