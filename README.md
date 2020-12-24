@@ -34,12 +34,16 @@ socketUrl: 'ws://yourdomain.com:8888'
 
 This assumes you have a rendered [Overviewer](https://overviewer.org/) map being served that you want to add player locations to.
 In order to add this functionality additional web assets need to be included in the render.
-These assets are the `player_locations.js`, `player_locations.css` and `index.html` files in this project.
+These assets are the JavaScript, CSS, image, and `index.html` files in this project.
 Place these files in a folder on the machine which renders the map.
 
 The JavaScript file is entirely required, the CSS file is optional, and the HTML file is really just taking what Overviewer has and adding the additional script and css to load.
 
 ```html
+<script type="text/javascript" src="socket_client.js"></script>
+<script type="text/javascript" src="player_list.js"></script>
+<script type="text/javascript" src="player_information.js"></script>
+<script type="text/javascript" src="server_information.js"></script>
 <script type="text/javascript" src="player_locations.js"></script>
 <link rel="stylesheet" href="player_locations.css" type="text/css" />
 ```

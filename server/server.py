@@ -27,7 +27,7 @@ class SocketServer:
         self.socket_host = os.getenv('SHOCKET_HOST', '0.0.0.0')
         self.socket_port = int(os.getenv('SOCKET_PORT', 8888))
         self.log_level = os.getenv('LOG_LEVEL', 'ERROR')
-        self.refresh_rate = os.getenv('REFRESH_RATE', 5)
+        self.refresh_rate = int(os.getenv('REFRESH_RATE', 5))
         
         self.log = logging.getLogger(__name__)
         logging.basicConfig(level=self.log_level)
@@ -78,29 +78,29 @@ class SocketServer:
             await asyncio.sleep(self.refresh_rate)
             
     def get_day_time(self):
-        response = self.rcon_client.command('/time query daytime')
+        response = self.rcon_client.command('time query daytime')
         match = re.search(r'([0-9]+)', response)
         day_time = int(match.group(1))
         return day_time
     
     def get_player_health(self, player_name):
-        response = self.rcon_client.command(f'/data get entity {player_name} Health')
+        response = self.rcon_client.command(f'data get entity {player_name} Health')
         match = re.search(r':.+?([0-9.]+)', response)
         player_health = float(match.group(1))
         return player_health
     
     def get_player_level(self, player_name):
-        response = self.rcon_client.command(f'/data get entity {player_name} XpLevel')
+        response = self.rcon_client.command(f'data get entity {player_name} XpLevel')
         match = re.search(r':.+?([0-9]+)', response)
         player_level = int(match.group(1))
         return player_level
     
     def get_player_position(self, player_name):
-        response = self.rcon_client.command(f'/data get entity {player_name} Pos')
+        response = self.rcon_client.command(f'data get entity {player_name} Pos')
         match = re.search(r'(\[.*\])', response)
         player_position = eval(match.group(1).replace('d', ''))
 
-        response = self.rcon_client.command(f'/data get entity {player_name} Dimension')
+        response = self.rcon_client.command(f'data get entity {player_name} Dimension')
         match = re.search(r'data: (.*)', response)
         player_dimension = match.group(1).strip('"')
         
@@ -110,24 +110,43 @@ class SocketServer:
             'z': player_position[2],
             'dimension': player_dimension            
         }
+        
+    def get_player_food_level(self, player_name):
+        response = self.rcon_client.command(f'data get entity {player_name} foodLevel')
+        match = re.search(r'data: ([0-9]+)', response)
+        player_food_level = float(match.group(1).strip())
+        
+        return player_food_level
+    
+    def get_player_air(self, player_name):
+        response = self.rcon_client.command(f'data get entity {player_name} Air')
+        match = re.search(r'data: ([0-9]+)', response)
+        player_air = int(match.group(1).strip())
+        
+        return player_air
     
     def get_player_data(self):
         players = []
-        response = self.rcon_client.command('/list')
+        response = self.rcon_client.command('list')
         match = re.search(r'([0-9]+).+:(.+)', response)
         number_of_players = int(match.group(1))
 
         if number_of_players:
             player_list = match.group(2).strip().split(', ')
             for player_name in player_list:
-                player = {
-                    'name': player_name,
-                    'position': self.get_player_position(player_name),
-                    'health': self.get_player_health(player_name),
-                    'level': self.get_player_level(player_name)
-                }
+                try:
+                    player = {
+                        'name': player_name,
+                        'position': self.get_player_position(player_name),
+                        'health': self.get_player_health(player_name),
+                        'level': self.get_player_level(player_name),
+                        'food': self.get_player_food_level(player_name),
+                        'air': self.get_player_air(player_name)
+                    }
 
-                players.append(player)
+                    players.append(player)
+                except (AttributeError):
+                    self.log.warning(f'There was a problem getting data for {player_name}. Have they gone offline during data fetching?')
 
         return players
     

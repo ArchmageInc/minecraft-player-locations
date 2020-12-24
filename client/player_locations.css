@@ -1,0 +1,222 @@
+.player-location-popup .leaflet-popup-content {
+  margin: 1px 19px;
+}
+
+.player-location-popup .leaflet-popup-content {
+    min-width: 100px
+}
+
+.player-location-popup .hearts, .player-list .hearts {
+    width: 100px;
+    height: 12px;
+    background-image: url(heart_sprites.png);
+}
+.player-location-popup .health-0, .player-list .health-0 {
+    background-position-y: 0px;
+}
+.player-location-popup .health-1, .player-list .health-1 {
+    background-position-y: -12px;
+}
+.player-location-popup .health-2, .player-list .health-2 {
+    background-position-y: -24px;
+}
+.player-location-popup .health-3, .player-list .health-3 {
+    background-position-y: -36px;
+}
+.player-location-popup .health-4, .player-list .health-4 {
+    background-position-y: -48px;
+}
+.player-location-popup .health-5, .player-list .health-5 {
+    background-position-y: -60px;
+}
+.player-location-popup .health-6, .player-list .health-6 {
+    background-position-y: -72px;
+}
+.player-location-popup .health-7, .player-list .health-7 {
+    background-position-y: -84px;
+}
+.player-location-popup .health-8, .player-list .health-8 {
+    background-position-y: -96px;
+}
+.player-location-popup .health-9, .player-list .health-9 {
+    background-position-y: -108px;
+}
+.player-location-popup .health-10, .player-list .health-10 {
+    background-position-y: -120px;
+}
+.player-location-popup .health-11, .player-list .health-11 {
+    background-position-y: -132px;
+}
+.player-location-popup .health-12, .player-list .health-12 {
+    background-position-y: -144px;
+}
+.player-location-popup .health-13, .player-list .health-13 {
+    background-position-y: -156px;
+}
+.player-location-popup .health-14, .player-list .health-14 {
+    background-position-y: -168px;
+}
+.player-location-popup .health-15, .player-list .health-15 {
+    background-position-y: -180px;
+}
+.player-location-popup .health-16, .player-list .health-16 {
+    background-position-y: -192px;
+}
+.player-location-popup .health-17, .player-list .health-17 {
+    background-position-y: -204px;
+}
+.player-location-popup .health-18, .player-list .health-18 {
+    background-position-y: -216px;
+}
+.player-location-popup .health-19, .player-list .health-19 {
+    background-position-y: -228px;
+}
+.player-location-popup .health-20, .player-list .health-20 {
+    background-position-y: -240px;
+}
+.player-location-popup .food, .player-list .food {
+    width: 100px;
+    height: 12px;
+    background-image: url(food_sprites.png);
+}
+.player-location-popup .hunger-0, .player-list .hunger-0 {
+    background-position-y: 0px;
+}
+.player-location-popup .hunger-1, .player-list .hunger-1 {
+    background-position-y: -12px;
+}
+.player-location-popup .hunger-2, .player-list .hunger-2 {
+    background-position-y: -24px;
+}
+.player-location-popup .hunger-3, .player-list .hunger-3 {
+    background-position-y: -36px;
+}
+.player-location-popup .hunger-4, .player-list .hunger-4 {
+    background-position-y: -48px;
+}
+.player-location-popup .hunger-5, .player-list .hunger-5 {
+    background-position-y: -60px;
+}
+.player-location-popup .hunger-6, .player-list .hunger-6 {
+    background-position-y: -72px;
+}
+.player-location-popup .hunger-7, .player-list .hunger-7 {
+    background-position-y: -84px;
+}
+.player-location-popup .hunger-8, .player-list .hunger-8 {
+    background-position-y: -96px;
+}
+.player-location-popup .hunger-9, .player-list .hunger-9 {
+    background-position-y: -108px;
+}
+.player-location-popup .hunger-10, .player-list .hunger-10 {
+    background-position-y: -120px;
+}
+.player-location-popup .hunger-11, .player-list .hunger-11 {
+    background-position-y: -132px;
+}
+.player-location-popup .hunger-12, .player-list .hunger-12 {
+    background-position-y: -144px;
+}
+.player-location-popup .hunger-13, .player-list .hunger-13 {
+    background-position-y: -156px;
+}
+.player-location-popup .hunger-14, .player-list .hunger-14 {
+    background-position-y: -168px;
+}
+.player-location-popup .hunger-15, .player-list .hunger-15 {
+    background-position-y: -180px;
+}
+.player-location-popup .hunger-16, .player-list .hunger-16 {
+    background-position-y: -192px;
+}
+.player-location-popup .hunger-17, .player-list .hunger-17 {
+    background-position-y: -204px;
+}
+.player-location-popup .hunger-18, .player-list .hunger-18 {
+    background-position-y: -216px;
+}
+.player-location-popup .hunger-19, .player-list .hunger-19 {
+    background-position-y: -228px;
+}
+.player-location-popup .hunger-20, .player-list .hunger-20 {
+    background-position-y: -240px;
+}
+
+.player-location-popup .air, .player-list .air {
+    height: 12px;
+    background-image: url(air_sprites.png);
+    background-repeat: repeat-x;
+}
+.player-location-popup .air-0, .player-list .air-0 {
+    width: 0px;
+}
+.player-location-popup .air-1, .player-list .air-1 {
+    width: 10px;
+}
+.player-location-popup .air-2, .player-list .air-2 {
+    width: 20px;
+}
+.player-location-popup .air-3, .player-list .air-3 {
+    width: 30px;
+}
+.player-location-popup .air-4, .player-list .air-4 {
+    width: 40px;
+}
+.player-location-popup .air-5, .player-list .air-5 {
+    width: 50px;
+}
+.player-location-popup .air-6, .player-list .air-6 {
+    width: 60px;
+}
+.player-location-popup .air-7, .player-list .air-7 {
+    width: 70px;
+}
+.player-location-popup .air-8, .player-list .air-8 {
+    width: 80px;
+}
+.player-location-popup .air-9, .player-list .air-9 {
+    width: 90px;
+}
+.player-location-popup .air-10, .player-list .air-10 {
+    width: 100px;
+}
+.xp {
+    width: 100px;
+    background-image: url(xp_bar.png);
+    height: 5px;
+    margin: 8px 0px;
+}
+.player-location-popup .xp .level, .player-list .xp .level {
+    position: relative;
+    border-radius: 12px;
+    border: #00AA00 solid;
+    color: #00AA00;
+    font-weight: bold;
+    left: 50%;
+    margin-left: -10%;
+    top: -11px;
+    background-color: #FFF;
+    display: inline-block;
+    padding: 2px;
+    font-size: 10px;
+    min-width: 12px;
+    text-align: center;
+}
+ul.player-list {
+    background: #FFF;
+    border-radius: 6px;
+    padding: 4px;
+}
+li.player-info {
+    padding: 4px;
+    border: 1px solid #000;
+    border-radius: 4px;
+    margin: 4px;
+}
+.player-info .player-icon, .player-info .player-card {
+    display: inline-block;
+}
+.player-icon:hover {
+    cursor: pointer;
+}
