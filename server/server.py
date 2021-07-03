@@ -23,7 +23,7 @@ class SocketServer:
     def __init__(self):
         self.rcon_host = os.getenv('RCON_HOST')
         self.rcon_password = os.getenv('RCON_PASSWORD')
-        self.rcon_port = os.getenv('RCON_PORT', 25575)
+        self.rcon_port = int(os.getenv('RCON_PORT', 25575))
         self.socket_host = os.getenv('SHOCKET_HOST', '0.0.0.0')
         self.socket_port = int(os.getenv('SOCKET_PORT', 8888))
         self.log_level = os.getenv('LOG_LEVEL', 'ERROR')
