@@ -4,7 +4,7 @@
   "description": "A way to display current player locations in Minecraft on a rendered Overviewer map.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
