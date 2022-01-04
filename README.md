@@ -30,6 +30,8 @@ line 2 of the `client.js` file must be modified to fit your needs.
 socketUrl: 'ws://yourdomain.com:8888'
 ```
 
+To use it on an **HTTPS site**, you need to use `wss` as protocol. Keep this in mind when changing the `socketUrl`.
+
 ### Overviewer
 
 This assumes you have a rendered [Overviewer](https://overviewer.org/) map being served that you want to add player locations to.
@@ -81,3 +83,12 @@ docker run \
 **--env "RCON_PORT=25575"** - This is the port RCON is listening to as defined in Minecraft's server.properties file
 
 **--env "RCON_PASSWORD=supersecretpassword"** - This is the password to connect to RCON as defined in Minecraft's server.properties file
+
+#### HTTPS Configuration
+Additional configuration required for maps running over https.
+
+**---env "WEBSOCKET_KEY=/path/to/keyfile"** - This is the keyfile of your https server (e.g. /etc/letsencrypt/live/MyDomain.example.com/privkey.pem)
+
+**---env "WEBSOCKET_CERT=/path/to/certfile"** - This is the certfile of your https server (e.g. /etc/letsencrypt/live/MyDomain.example.com/fullchain.pem)
+
+To mount these files into the container use `--mount` as found in [the Docker documentation](https://docs.docker.com/storage/bind-mounts/).
