@@ -78,11 +78,13 @@ docker run \
 
 **--publish 8888:8888** - This is what maps the container port to the host port. If you need a different port bound to the local machine, change the right hand port number
 
-**--env "RCON_HOST=MyMineCraftHost"** - This is the hostname of the Minecraft server
+**--env "RCON_HOST=MyMineCraftHost"** - This is the hostname of the Minecraft server. When hosting the minecraft directly on your machine this value has to be set to `host.docker.internal`.
 
 **--env "RCON_PORT=25575"** - This is the port RCON is listening to as defined in Minecraft's server.properties file
 
 **--env "RCON_PASSWORD=supersecretpassword"** - This is the password to connect to RCON as defined in Minecraft's server.properties file
+
+**--add-host=host.docker.internal:host-gateway"** - This env has to be added when running a Docker Version below 18.03.
 
 #### HTTPS Configuration
 Additional configuration required for maps running over https.
