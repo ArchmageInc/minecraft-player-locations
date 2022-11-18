@@ -66,6 +66,7 @@ An example docker run command looks like this:
 docker run \
   --detach \
   --publish 8888:8888 \
+  --add-host=host.docker.internal:host-gateway
   --name minecraft-player-locations \
   --env "NODE_ENV=production" \
   --env "RCON_HOST=MyMineCraftHost" \
@@ -78,7 +79,7 @@ docker run \
 
 **--publish 8888:8888** - This is what maps the container port to the host port. If you need a different port bound to the local machine, change the right hand port number
 
-**--env "RCON_HOST=MyMineCraftHost"** - This is the hostname of the Minecraft server
+**--env "RCON_HOST=MyMineCraftHost"** - This is the hostname of the Minecraft server. When hosting the minecraft server directly on your machine this value has to be set to `host.docker.internal`.
 
 **--env "RCON_PORT=25575"** - This is the port RCON is listening to as defined in Minecraft's server.properties file
 
