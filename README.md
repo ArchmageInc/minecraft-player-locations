@@ -66,6 +66,7 @@ An example docker run command looks like this:
 docker run \
   --detach \
   --publish 8888:8888 \
+  --add-host=host.docker.internal:host-gateway
   --name minecraft-player-locations \
   --env "NODE_ENV=production" \
   --env "RCON_HOST=MyMineCraftHost" \
@@ -83,8 +84,6 @@ docker run \
 **--env "RCON_PORT=25575"** - This is the port RCON is listening to as defined in Minecraft's server.properties file
 
 **--env "RCON_PASSWORD=supersecretpassword"** - This is the password to connect to RCON as defined in Minecraft's server.properties file
-
-**--add-host=host.docker.internal:host-gateway"** - This env has to be added when running a Docker Version below 18.03.
 
 #### HTTPS Configuration
 Additional configuration required for maps running over https.
